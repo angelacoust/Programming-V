@@ -1,0 +1,70 @@
+services:
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  clothing-catalog-service:
+    build: ./clothing-catalog-service
+    ports:
+      - "8001:8000"
+    environment:
+      MONGO_URL: mongodb://mongo:27017
+      CATALOG_DB_NAME: catalog_db
+      NOTIFICATION_URL: http://notification-service:8000
+    depends_on:
+      - mongo
+
+  order-service:
+    build: ./order-service
+    ports:
+      - "8002:8000"
+    environment:
+      MONGO_URL: mongodb://mongo:27017
+      ORDER_DB_NAME: order_db
+      CATALOG_URL: http://clothing-catalog-service:8000
+      NOTIFICATION_URL: http://notification-service:8000
+    depends_on:
+      - mongo
+      - clothing-catalog-service
+      - notification-service
+
+  payment-service:
+    build: ./payment-service
+    ports:
+      - "8003:8000"
+    environment:
+      MONGO_URL: mongodb://mongo:27017
+      PAYMENT_DB_NAME: payment_db
+      ORDER_URL: http://order-service:8000
+    depends_on:
+      - mongo
+      - order-service
+
+  notification-service:
+    build: ./notification-service
+    ports:
+      - "8004:8000"
+    environment:
+      MONGO_URL: mongodb://mongo:27017
+      NOTIFICATION_DB_NAME: notification_db
+      CATALOG_URL: http://clothing-catalog-service:8000
+    depends_on:
+      - mongo
+
+  client:
+    image: nginx:alpine
+    ports:
+      - "8123:80"
+    volumes:
+      - ./client:/usr/share/nginx/html:ro
+    depends_on:
+      - clothing-catalog-service
+      - order-service
+      - payment-service
+      - notification-service
+
+volumes:
+  mongo-data:

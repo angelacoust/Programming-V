@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <title>Second-Hand Clothing App</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <div class="wrap" style="padding:0">
+      <h1>Second-Hand Clothing</h1>
+      <p>Buy and sell second-hand clothing · microservices + real-time</p>
+    </div>
+  </header>
+
+  <div class="wrap">
+    <!-- CATALOG -->
+    <section id="page-catalog" class="page active">
+      <div class="searchbar">
+        <input id="searchInput" placeholder="Search by name" oninput="onSearch()" />
+      </div>
+      <p class="hint">Sold items are hidden by default. Search by name to find them.</p>
+      <div class="section-title">
+        <h3>Catalog</h3>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span id="catalogCount" class="count">0 items</span>
+          <button class="ghost small" onclick="loadCatalog()">Refresh</button>
+        </div>
+      </div>
+      <div id="catalog" class="cards"><div class="loading">Loading...</div></div>
+    </section>
+
+    <!-- SELL -->
+    <section id="page-sell" class="page">
+      <div class="panel">
+        <div class="panel-head">
+          <div><h2>Publish item</h2><small>Sell what you no longer use</small></div>
+        </div>
+        <div class="panel-body">
+          <label>Item name</label>
+          <input id="itemName" placeholder="e.g. Denim Jacket" value="Vintage Jacket" />
+          <div class="row" style="margin-top:8px">
+            <div>
+              <label>Price</label>
+              <input id="itemPrice" type="number" min="1" step="0.01" placeholder="Price" value="50" />
+            </div>
+            <div>
+              <label>Category</label>
+              <select id="itemCategory" onchange="updateSizeOptions()">
+                <option value="T-shirt">T-shirt</option>
+                <option value="Shirt">Shirt</option>
+                <option value="Pants">Pants</option>
+                <option value="Jeans">Jeans</option>
+                <option value="Jacket" selected>Jacket</option>
+                <option value="Coat">Coat</option>
+                <option value="Dress">Dress</option>
+                <option value="Skirt">Skirt</option>
+                <option value="Shoes">Shoes</option>
+                <option value="Sneakers">Sneakers</option>
+                <option value="Accessories">Accessories</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="row" style="margin-top:8px">
+            <div>
+              <label>Size</label>
+              <select id="itemSize"></select>
+            </div>
+            <div>
+              <label>Condition</label>
+              <select id="itemCondition">
+                <option value="Like new">Like new</option>
+                <option value="Excellent">Excellent</option>
+                <option value="Very good">Very good</option>
+                <option value="Good" selected>Good</option>
+                <option value="Satisfactory">Satisfactory</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn-block" onclick="publishItem()">Publish item</button>
+        </div>
+      </div>
+      <div class="section-title">
+        <h3>My listings</h3>
+        <span id="myListingsCount" class="count">0</span>
+      </div>
+      <div id="myListings" class="list"><div class="loading">Loading...</div></div>
+    </section>
+
+    <!-- PROFILE -->
+    <section id="page-profile" class="page">
+      <div class="panel">
+        <div class="panel-head">
+          <div><h2>My account</h2><small>Switch account and real-time connection</small></div>
+        </div>
+        <div class="panel-body">
+          <label>Username</label>
+          <div class="row">
+            <input id="accountName" placeholder="Your name" />
+            <button class="ghost" onclick="changeAccount()">Change</button>
+          </div>
+          <div class="status-line">
+            <span>Real-time connection</span>
+            <span id="rtStatus" class="badge offline">Offline</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="section-title"><h3>Favorites</h3><span id="favCount" class="count">0</span></div>
+      <div id="favorites" class="cards"><div class="loading">Loading...</div></div>
+
+      <div class="section-title"><h3>Sold items</h3><span id="soldCount" class="count">0</span></div>
+      <div id="soldItems" class="list"><div class="loading">Loading...</div></div>
+
+      <div class="section-title"><h3>Purchase history</h3><span id="historyCount" class="count">0</span></div>
+      <div id="history" class="list"><div class="loading">Loading...</div></div>
+
+      <div class="feed">
+        <div class="section-title" style="margin-top:0">
+          <h3>Notifications</h3>
+          <button class="ghost small" onclick="clearNotifications()">Clear all</button>
+        </div>
+        <div id="notificationsFeed"><div class="empty">You will see your notifications here.</div></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- PAYMENT MODAL -->
+  <div id="paymentModal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-head">
+        <h3>Secure checkout</h3>
+        <p>Review your order and pay with a simulated card.</p>
+      </div>
+      <div class="modal-body">
+        <div class="summary">
+          <div class="summary-line"><span>Item</span><strong id="sumItem">-</strong></div>
+          <div class="summary-line"><span>Seller</span><span id="sumSeller">-</span></div>
+          <div class="summary-line"><span>Order</span><span id="sumOrder">-</span></div>
+          <div class="summary-line total"><span>Total</span><span id="sumTotal">-</span></div>
+        </div>
+
+        <div class="card-preview">
+          <div class="lbl">Card number</div>
+          <div class="num" id="previewNumber">.... .... .... ....</div>
+          <div style="display:flex;justify-content:space-between;margin-top:10px">
+            <div><div class="lbl">Expires</div><div id="previewExpiry" style="font-size:13px">MM/YY</div></div>
+            <div><div class="lbl">CVV</div><div id="previewCvv" style="font-size:13px">...</div></div>
+          </div>
+        </div>
+
+        <label>Card number</label>
+        <input id="cardNumber" inputmode="numeric" autocomplete="cc-number" placeholder="4111 1111 1111 1111" value="4111 1111 1111 1111" oninput="formatCard()" />
+        <div class="row">
+          <div>
+            <label>Expiry</label>
+            <input id="cardExpiry" inputmode="numeric" placeholder="12/28" value="12/28" oninput="formatExpiry()" />
+          </div>
+          <div>
+            <label>CVV</label>
+            <input id="cardCvv" inputmode="numeric" placeholder="123" value="123" maxlength="4" oninput="formatCvv()" />
+          </div>
+        </div>
+        <div id="payError" class="error-msg"></div>
+        <div class="modal-actions">
+          <button class="ghost" onclick="closePayment()">Cancel</button>
+          <button id="payBtn" class="ok" onclick="confirmPayment()">Pay now</button>
+        </div>
+        <p style="font-size:11px;color:var(--muted);margin:12px 0 0;text-align:center">
+          Use a card ending in <b>1111</b> to approve or <b>0000</b> to decline.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div id="toasts"></div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-page="catalog" onclick="showPage('catalog')">Catalog</button>
+    <button class="nav-btn" data-page="sell" onclick="showPage('sell')">Sell</button>
+    <button class="nav-btn" data-page="profile" onclick="showPage('profile')">Profile</button>
+  </nav>
+
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

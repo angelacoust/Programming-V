@@ -1,3 +1,6 @@
-# macOS
 .DS_Store
-**/.DS_Store
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+mongo-data/
